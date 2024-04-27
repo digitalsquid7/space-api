@@ -1,0 +1,15 @@
+version: '3'
+
+dotenv: ['.env']
+
+tasks:
+  start-postgres:
+    desc: Spin up a postgres docker container
+    cmds:
+      - docker rm -f postgres
+      - docker run -d --rm --name postgres --network=bridge -p 5432:5432 -e POSTGRES_DB=space -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test postgres:latest
+
+  generate-swagger:
+    desc: Generate swagger files from Go doc strings
+    cmds:
+      - swag init -g ./cmd/main/main.go

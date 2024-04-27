@@ -1,0 +1,58 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a sample server celler server.",
+        "title": "Swagger Example API",
+        "contact": {
+            "name": "digitalsquid7"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/exoplanets": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exoplanets"
+                ],
+                "summary": "Read a list of exoplanets",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/exoplanets.Exoplanet"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "exoplanets.Exoplanet": {
+            "type": "object",
+            "properties": {
+                "hostName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "planetName": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BasicAuth": {
+            "type": "basic"
+        }
+    }
+}

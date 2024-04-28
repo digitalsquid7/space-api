@@ -9,26 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var fields = Fields{
-	fields: []Field{
-		{
-			SQLName: "id",
-			APIName: "id",
-			Type:    Integer,
-		},
-		{
-			SQLName: "account_name",
-			APIName: "accountName",
-			Type:    String,
-		},
-		{
-			SQLName: "birth_dt",
-			APIName: "birthDate",
-			Type:    Date,
-		},
-	},
-}
-
 func TestLoad(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -217,4 +197,24 @@ func TestLoad(t *testing.T) {
 			require.Equal(t, test.expectedResult, result)
 		})
 	}
+}
+
+var fields = Fields{
+	fields: []Field{
+		{
+			SQLName: "id",
+			APIName: "id",
+			Type:    Integer,
+		},
+		{
+			SQLName: "account_name",
+			APIName: "accountName",
+			Type:    String,
+		},
+		{
+			SQLName: "birth_dt",
+			APIName: "birthDate",
+			Type:    Date,
+		},
+	},
 }

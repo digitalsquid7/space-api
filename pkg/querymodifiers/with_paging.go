@@ -19,7 +19,18 @@ func WithPaging(defaultSize int) func(*URLParams, *QueryModifiers) error {
 			return err
 		}
 
-		reqParams.Page.Number, err = urlParams.GetInt("pageNumber", 1)
+		if reqParams.Page.Size < 1 || reqParams.Page.Size > 1000 {
+			return NewInvalidInputError("pageSize", "must be >= 1 and <= 1000")
+		}
+
+		if reqParams.Page.Number, err = urlParams.GetInt("pageNumber", 1); err != nil {
+			return err
+		}
+
+		if reqParams.Page.Number < 1 {
+			return NewInvalidInputError("pageNumber", "must be >= 1")
+		}
+
 		return err
 	}
 }

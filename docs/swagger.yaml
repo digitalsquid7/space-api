@@ -28,9 +28,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/exoplanets.Exoplanet'
-      summary: Read a list of exoplanets
+      summary: Read a list of exoplanetsapi
       tags:
-      - exoplanets
+      - exoplanetsapi
 securityDefinitions:
   BasicAuth:
     type: basic

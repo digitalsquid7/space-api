@@ -14,14 +14,12 @@ type Field struct {
 	Type    FieldType
 }
 
-type Fields struct {
-	fields []Field
-}
+type Fields []Field
 
 func (f Fields) GetFieldByAPIName(name string) (Field, bool) {
-	for i := range f.fields {
-		if f.fields[i].APIName == name {
-			return f.fields[i], true
+	for i := range f {
+		if f[i].APIName == name {
+			return f[i], true
 		}
 	}
 

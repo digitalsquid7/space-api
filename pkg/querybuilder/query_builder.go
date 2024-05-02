@@ -5,6 +5,8 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
+
+	_ "github.com/doug-martin/goqu/v9/dialect/postgres"
 )
 
 type QueryBuilder struct {
@@ -12,12 +14,12 @@ type QueryBuilder struct {
 }
 
 func New() *QueryBuilder {
-	return &QueryBuilder{}
+	return &QueryBuilder{
+		dialect: goqu.Dialect("postgres"),
+	}
 }
 
-func (q *QueryBuilder) Build(baseQuery string, modifiers querymodifiers.QueryModifiers) (string, []any, error) {
-	query := q.dialect.From(baseQuery, modifiers)
-
+func (q *QueryBuilder) Build(query *goqu.SelectDataset, modifiers *querymodifiers.QueryModifiers) (string, []any, error) {
 	query = q.applyPaging(query, modifiers)
 	query = q.applyFilters(query, modifiers)
 	query = q.applySorting(query, modifiers)
@@ -26,7 +28,7 @@ func (q *QueryBuilder) Build(baseQuery string, modifiers querymodifiers.QueryMod
 	return query.ToSQL()
 }
 
-func (q *QueryBuilder) applyPaging(query *goqu.SelectDataset, modifiers querymodifiers.QueryModifiers) *goqu.SelectDataset {
+func (q *QueryBuilder) applyPaging(query *goqu.SelectDataset, modifiers *querymodifiers.QueryModifiers) *goqu.SelectDataset {
 	if modifiers.Page == nil {
 		return query
 	}
@@ -37,7 +39,7 @@ func (q *QueryBuilder) applyPaging(query *goqu.SelectDataset, modifiers querymod
 	return query
 }
 
-func (q *QueryBuilder) applyFilters(query *goqu.SelectDataset, modifiers querymodifiers.QueryModifiers) *goqu.SelectDataset {
+func (q *QueryBuilder) applyFilters(query *goqu.SelectDataset, modifiers *querymodifiers.QueryModifiers) *goqu.SelectDataset {
 	expressions := make([]goqu.Expression, 0, len(modifiers.Filters))
 	for _, filter := range modifiers.Filters {
 		col := goqu.C(filter.Field.SQLName)
@@ -58,7 +60,7 @@ func (q *QueryBuilder) applyFilters(query *goqu.SelectDataset, modifiers querymo
 	return query.Where(goqu.And(expressions...))
 }
 
-func (q *QueryBuilder) applySorting(query *goqu.SelectDataset, modifiers querymodifiers.QueryModifiers) *goqu.SelectDataset {
+func (q *QueryBuilder) applySorting(query *goqu.SelectDataset, modifiers *querymodifiers.QueryModifiers) *goqu.SelectDataset {
 	expressions := make([]exp.OrderedExpression, 0, len(modifiers.SortFields))
 
 	for _, sortField := range modifiers.SortFields {

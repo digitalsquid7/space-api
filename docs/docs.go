@@ -17,7 +17,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/exoplanets": {
+        "/exoplanetsapi": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -26,14 +26,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "exoplanets"
+                    "exoplanetsapi"
                 ],
-                "summary": "Read a list of exoplanets",
+                "summary": "Read a list of exoplanetsapi",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/exoplanets.Exoplanet"
+                            "$ref": "#/definitions/exoplanetsapi.Exoplanet"
                         }
                     }
                 }
@@ -41,7 +41,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "exoplanets.Exoplanet": {
+        "exoplanetsapi.Exoplanet": {
             "type": "object",
             "properties": {
                 "hostName": {

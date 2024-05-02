@@ -200,21 +200,19 @@ func TestLoad(t *testing.T) {
 }
 
 var fields = Fields{
-	fields: []Field{
-		{
-			SQLName: "id",
-			APIName: "id",
-			Type:    Integer,
-		},
-		{
-			SQLName: "account_name",
-			APIName: "accountName",
-			Type:    String,
-		},
-		{
-			SQLName: "birth_dt",
-			APIName: "birthDate",
-			Type:    Date,
-		},
+	{
+		SQLName: "id",
+		APIName: "id",
+		Type:    Integer,
+	},
+	{
+		SQLName: "account_name",
+		APIName: "accountName",
+		Type:    String,
+	},
+	{
+		SQLName: "birth_dt",
+		APIName: "birthDate",
+		Type:    Date,
 	},
 }

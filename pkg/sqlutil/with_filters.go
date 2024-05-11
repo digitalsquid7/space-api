@@ -1,9 +1,11 @@
-package querymodifiers
+package sqlutil
 
 import (
 	"fmt"
 	"regexp"
 	"sort"
+	"space-api/pkg/models"
+	"space-api/pkg/urlparams"
 	"strconv"
 	"time"
 )
@@ -22,8 +24,8 @@ type Filter struct {
 	Value    any
 }
 
-func WithFilters(fields Fields) func(*URLParams, *QueryModifiers) error {
-	return func(urlParams *URLParams, reqParams *QueryModifiers) error {
+func WithFilters(fields Fields) func(*urlparams.URLParams, *QueryModifiers) error {
+	return func(urlParams *urlparams.URLParams, reqParams *QueryModifiers) error {
 		reqParams.Filters = make([]Filter, 0)
 		regex, err := regexp.Compile(`^(?P<field>[a-zA-Z]+)\[(?P<operator>eq|lte|gte)]$`)
 		if err != nil {
@@ -44,7 +46,7 @@ func WithFilters(fields Fields) func(*URLParams, *QueryModifiers) error {
 
 			field, ok := fields.GetFieldByAPIName(submatches[1])
 			if !ok {
-				return NewInvalidInputError(submatches[1], "not a filterable field")
+				return models.NewInvalidInputError(submatches[1], "not a filterable field")
 			}
 
 			sqlValue, err := convertToSQLValue(field, values[0])
@@ -75,7 +77,7 @@ func convertToSQLValue(field Field, apiValue string) (any, error) {
 	if field.Type == Integer {
 		converted, err := strconv.Atoi(apiValue)
 		if err != nil {
-			return nil, NewInvalidInputError(field.APIName, "must be an integer")
+			return nil, models.NewInvalidInputError(field.APIName, "must be an integer")
 		}
 		return converted, nil
 	}
@@ -83,7 +85,7 @@ func convertToSQLValue(field Field, apiValue string) (any, error) {
 	if field.Type == Date {
 		converted, err := time.Parse("2006-01-02", apiValue)
 		if err != nil {
-			return nil, NewInvalidInputError(field.APIName, "date must be in the format YYYY-MM-DD")
+			return nil, models.NewInvalidInputError(field.APIName, "date must be in the format YYYY-MM-DD")
 		}
 		return converted, nil
 	}

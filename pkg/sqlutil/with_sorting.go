@@ -1,8 +1,10 @@
-package querymodifiers
+package sqlutil
 
 import (
 	"fmt"
 	"regexp"
+	"space-api/pkg/models"
+	"space-api/pkg/urlparams"
 	"strings"
 )
 
@@ -18,8 +20,8 @@ type SortField struct {
 	Direction Direction
 }
 
-func WithSorting(fields Fields) func(*URLParams, *QueryModifiers) error {
-	return func(urlParams *URLParams, reqParams *QueryModifiers) error {
+func WithSorting(fields Fields) func(*urlparams.URLParams, *QueryModifiers) error {
+	return func(urlParams *urlparams.URLParams, reqParams *QueryModifiers) error {
 		reqParams.SortFields = make([]SortField, 0)
 
 		sort := urlParams.Values.Get("sort")
@@ -34,7 +36,7 @@ func WithSorting(fields Fields) func(*URLParams, *QueryModifiers) error {
 		}
 
 		if !matched {
-			return NewInvalidInputError("sort", "must match the regex: "+regex)
+			return models.NewInvalidInputError("sort", "must match the regex: "+regex)
 		}
 
 		columns := strings.Split(sort, ", ")
@@ -44,7 +46,7 @@ func WithSorting(fields Fields) func(*URLParams, *QueryModifiers) error {
 
 			field, ok := fields.GetFieldByAPIName(parts[0])
 			if !ok {
-				return NewInvalidInputError("sort", parts[0]+" is not a sortable field")
+				return models.NewInvalidInputError("sort", parts[0]+" is not a sortable field")
 			}
 
 			sortField := SortField{Field: field, Direction: Direction(parts[1])}

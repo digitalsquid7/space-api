@@ -1,8 +1,6 @@
-package querybuilder
+package sqlutil
 
 import (
-	"space-api/pkg/querymodifiers"
-
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
 
@@ -13,13 +11,13 @@ type QueryBuilder struct {
 	dialect goqu.DialectWrapper
 }
 
-func New() *QueryBuilder {
+func NewQueryBuilder() *QueryBuilder {
 	return &QueryBuilder{
 		dialect: goqu.Dialect("postgres"),
 	}
 }
 
-func (q *QueryBuilder) Build(query *goqu.SelectDataset, modifiers *querymodifiers.QueryModifiers) (string, []any, error) {
+func (q *QueryBuilder) BuildQuery(query *goqu.SelectDataset, modifiers *QueryModifiers) (string, []any, error) {
 	query = q.applyPaging(query, modifiers)
 	query = q.applyFilters(query, modifiers)
 	query = q.applySorting(query, modifiers)
@@ -28,7 +26,14 @@ func (q *QueryBuilder) Build(query *goqu.SelectDataset, modifiers *querymodifier
 	return query.ToSQL()
 }
 
-func (q *QueryBuilder) applyPaging(query *goqu.SelectDataset, modifiers *querymodifiers.QueryModifiers) *goqu.SelectDataset {
+func (q *QueryBuilder) BuildCountQuery(query *goqu.SelectDataset, modifiers *QueryModifiers) (string, []any, error) {
+	query = q.applyFilters(query, modifiers)
+
+	query.Prepared(true)
+	return query.ToSQL()
+}
+
+func (q *QueryBuilder) applyPaging(query *goqu.SelectDataset, modifiers *QueryModifiers) *goqu.SelectDataset {
 	if modifiers.Page == nil {
 		return query
 	}
@@ -39,18 +44,18 @@ func (q *QueryBuilder) applyPaging(query *goqu.SelectDataset, modifiers *querymo
 	return query
 }
 
-func (q *QueryBuilder) applyFilters(query *goqu.SelectDataset, modifiers *querymodifiers.QueryModifiers) *goqu.SelectDataset {
+func (q *QueryBuilder) applyFilters(query *goqu.SelectDataset, modifiers *QueryModifiers) *goqu.SelectDataset {
 	expressions := make([]goqu.Expression, 0, len(modifiers.Filters))
 	for _, filter := range modifiers.Filters {
 		col := goqu.C(filter.Field.SQLName)
 
 		var expression goqu.Expression
 		switch filter.Operator {
-		case querymodifiers.Equals:
+		case Equals:
 			expression = col.Eq(filter.Value)
-		case querymodifiers.GTE:
+		case GTE:
 			expression = col.Gte(filter.Value)
-		case querymodifiers.LTE:
+		case LTE:
 			expression = col.Lte(filter.Value)
 		}
 
@@ -60,11 +65,11 @@ func (q *QueryBuilder) applyFilters(query *goqu.SelectDataset, modifiers *querym
 	return query.Where(goqu.And(expressions...))
 }
 
-func (q *QueryBuilder) applySorting(query *goqu.SelectDataset, modifiers *querymodifiers.QueryModifiers) *goqu.SelectDataset {
+func (q *QueryBuilder) applySorting(query *goqu.SelectDataset, modifiers *QueryModifiers) *goqu.SelectDataset {
 	expressions := make([]exp.OrderedExpression, 0, len(modifiers.SortFields))
 
 	for _, sortField := range modifiers.SortFields {
-		if sortField.Direction == querymodifiers.Ascending {
+		if sortField.Direction == Ascending {
 			expressions = append(expressions, goqu.C(sortField.Field.SQLName).Asc())
 		} else {
 			expressions = append(expressions, goqu.C(sortField.Field.SQLName).Desc())

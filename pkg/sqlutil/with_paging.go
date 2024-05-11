@@ -1,4 +1,9 @@
-package querymodifiers
+package sqlutil
+
+import (
+	"space-api/pkg/models"
+	"space-api/pkg/urlparams"
+)
 
 type Page struct {
 	Size             int
@@ -6,8 +11,8 @@ type Page struct {
 	IncludeTotalSize bool
 }
 
-func WithPaging(defaultSize int) func(*URLParams, *QueryModifiers) error {
-	return func(urlParams *URLParams, reqParams *QueryModifiers) error {
+func WithPaging(defaultSize int) func(*urlparams.URLParams, *QueryModifiers) error {
+	return func(urlParams *urlparams.URLParams, reqParams *QueryModifiers) error {
 		reqParams.Page = &Page{}
 
 		var err error
@@ -20,7 +25,7 @@ func WithPaging(defaultSize int) func(*URLParams, *QueryModifiers) error {
 		}
 
 		if reqParams.Page.Size < 1 || reqParams.Page.Size > 1000 {
-			return NewInvalidInputError("pageSize", "must be >= 1 and <= 1000")
+			return models.NewInvalidInputError("pageSize", "must be >= 1 and <= 1000")
 		}
 
 		if reqParams.Page.Number, err = urlParams.GetInt("pageNumber", 1); err != nil {
@@ -28,7 +33,7 @@ func WithPaging(defaultSize int) func(*URLParams, *QueryModifiers) error {
 		}
 
 		if reqParams.Page.Number < 1 {
-			return NewInvalidInputError("pageNumber", "must be >= 1")
+			return models.NewInvalidInputError("pageNumber", "must be >= 1")
 		}
 
 		return err

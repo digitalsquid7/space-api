@@ -1,4 +1,4 @@
-package querymodifiers
+package sqlutil
 
 type FieldType string
 

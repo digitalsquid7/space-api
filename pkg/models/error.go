@@ -1,4 +1,4 @@
-package querymodifiers
+package models
 
 import "fmt"
 
@@ -12,5 +12,5 @@ func NewInvalidInputError(field, message string) *InvalidInputError {
 }
 
 func (e *InvalidInputError) Error() string {
-	return fmt.Sprintf(`"%s": %s`, e.field, e.message)
+	return fmt.Sprintf(`%s: %s`, e.field, e.message)
 }

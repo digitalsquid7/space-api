@@ -1,15 +1,16 @@
-package querymodifiers
+package sqlutil
 
 import (
 	"net/http"
 	"net/url"
+	"space-api/pkg/models"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestLoad(t *testing.T) {
+func TestLoadQueryModifiers(t *testing.T) {
 	tests := []struct {
 		name           string
 		url            string
@@ -152,37 +153,37 @@ func TestLoad(t *testing.T) {
 			name:        "invalid page number",
 			url:         "?pageNumber=five",
 			options:     []Option{WithPaging(10)},
-			expectedErr: NewInvalidInputError("pageNumber", "must be an integer"),
+			expectedErr: models.NewInvalidInputError("pageNumber", "must be an integer"),
 		},
 		{
 			name:        "invalid page size",
 			url:         "?pageSize=five",
 			options:     []Option{WithPaging(10)},
-			expectedErr: NewInvalidInputError("pageSize", "must be an integer"),
+			expectedErr: models.NewInvalidInputError("pageSize", "must be an integer"),
 		},
 		{
 			name:        "invalid include total size",
 			url:         "?includeTotalSize=invalidvalue",
 			options:     []Option{WithPaging(10)},
-			expectedErr: NewInvalidInputError("includeTotalSize", "must be a boolean"),
+			expectedErr: models.NewInvalidInputError("includeTotalSize", "must be a boolean"),
 		},
 		{
 			name:        "invalid sort format",
 			url:         "?sort=accountName asc,, id ",
 			options:     []Option{WithSorting(fields)},
-			expectedErr: NewInvalidInputError("sort", "must match the regex: ^[a-zA-Z]+ (asc|desc)(, [a-zA-Z]+ (asc|desc))*$"),
+			expectedErr: models.NewInvalidInputError("sort", "must match the regex: ^[a-zA-Z]+ (asc|desc)(, [a-zA-Z]+ (asc|desc))*$"),
 		},
 		{
 			name:        "invalid sort field",
 			url:         "?sort=notReal desc",
 			options:     []Option{WithSorting(fields)},
-			expectedErr: NewInvalidInputError("sort", "notReal is not a sortable field"),
+			expectedErr: models.NewInvalidInputError("sort", "notReal is not a sortable field"),
 		},
 		{
 			name:        "invalid filter field",
 			url:         "?notReal[eq]=Squid",
 			options:     []Option{WithFilters(fields)},
-			expectedErr: NewInvalidInputError("notReal", "not a filterable field"),
+			expectedErr: models.NewInvalidInputError("notReal", "not a filterable field"),
 		},
 	}
 	for _, test := range tests {
@@ -191,7 +192,7 @@ func TestLoad(t *testing.T) {
 			require.NoError(t, err)
 			req := &http.Request{URL: testURL}
 
-			result, err := Load(req, test.options...)
+			result, err := LoadQueryModifiers(req, test.options...)
 
 			require.Equal(t, test.expectedErr, err)
 			require.Equal(t, test.expectedResult, result)

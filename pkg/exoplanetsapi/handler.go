@@ -4,8 +4,7 @@ import (
 	"net/http"
 	"space-api/pkg/exoplanetsrepo"
 	"space-api/pkg/models"
-	"space-api/pkg/querybuilder"
-	"space-api/pkg/querymodifiers"
+	"space-api/pkg/sqlutil"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,12 +14,12 @@ type Selector[T any] interface {
 }
 
 type Handler struct {
-	fields       querymodifiers.Fields
-	queryBuilder *querybuilder.QueryBuilder
+	fields       sqlutil.Fields
+	queryBuilder *sqlutil.QueryBuilder
 	repository   *exoplanetsrepo.ExoplanetsRepository
 }
 
-func NewHandler(queryBuilder *querybuilder.QueryBuilder, repository *exoplanetsrepo.ExoplanetsRepository) *Handler {
+func NewHandler(queryBuilder *sqlutil.QueryBuilder, repository *exoplanetsrepo.ExoplanetsRepository) *Handler {
 	return &Handler{
 		fields:       getFields(),
 		queryBuilder: queryBuilder,
@@ -36,56 +35,63 @@ func NewHandler(queryBuilder *querybuilder.QueryBuilder, repository *exoplanetsr
 // @Produce      json
 // @Success      200  {object}  models.Exoplanet
 func (h *Handler) Get(ctx *gin.Context) {
-	queryModifiers, err := querymodifiers.Load(ctx.Request,
-		querymodifiers.WithPaging(20),
-		querymodifiers.WithFilters(h.fields),
-		querymodifiers.WithSorting(h.fields))
+	queryModifiers, err := sqlutil.LoadQueryModifiers(ctx.Request,
+		sqlutil.WithPaging(20),
+		sqlutil.WithFilters(h.fields),
+		sqlutil.WithSorting(h.fields))
 	if err != nil {
 		_ = ctx.Error(err)
 		return
 	}
 
-	exoplanets, err := h.repository.Read(queryModifiers)
-	if err != nil {
+	response := models.Response[models.Exoplanet]{}
+	if response.Data, err = h.repository.ReadExoplanets(queryModifiers); err != nil {
 		_ = ctx.Error(err)
 		return
 	}
 
-	response := models.Response[models.Exoplanet]{Data: exoplanets}
+	if queryModifiers.Page.IncludeTotalSize {
+		response.Meta = &models.Meta{}
+		if response.Meta.TotalSize, err = h.repository.ReadCount(queryModifiers); err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+	}
+
 	ctx.JSON(http.StatusOK, &response)
 }
 
-func getFields() querymodifiers.Fields {
-	return querymodifiers.Fields{
+func getFields() sqlutil.Fields {
+	return sqlutil.Fields{
 		{
 			SQLName: "id",
 			APIName: "id",
-			Type:    querymodifiers.Integer,
+			Type:    sqlutil.Integer,
 		},
 		{
 			SQLName: "planet_name",
 			APIName: "planetName",
-			Type:    querymodifiers.String,
+			Type:    sqlutil.String,
 		},
 		{
 			SQLName: "host_name",
 			APIName: "hostName",
-			Type:    querymodifiers.String,
+			Type:    sqlutil.String,
 		},
 		{
 			SQLName: "system_number",
 			APIName: "systemNumber",
-			Type:    querymodifiers.Integer,
+			Type:    sqlutil.Integer,
 		},
 		{
 			SQLName: "discovery_method",
 			APIName: "discoveryMethod",
-			Type:    querymodifiers.String,
+			Type:    sqlutil.String,
 		},
 		{
 			SQLName: "year_discovered",
 			APIName: "yearDiscovered",
-			Type:    querymodifiers.String,
+			Type:    sqlutil.String,
 		},
 	}
 }

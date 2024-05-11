@@ -1,7 +1,8 @@
-package querymodifiers
+package urlparams
 
 import (
 	"net/url"
+	"space-api/pkg/models"
 	"strconv"
 )
 
@@ -10,7 +11,7 @@ type URLParams struct {
 	Values url.Values
 }
 
-func NewURLParams(values url.Values) *URLParams {
+func New(values url.Values) *URLParams {
 	return &URLParams{Values: values}
 }
 
@@ -22,7 +23,7 @@ func (u *URLParams) GetInt(field string, defaultValue int) (int, error) {
 
 	converted, err := strconv.Atoi(value)
 	if err != nil {
-		return 0, NewInvalidInputError(field, "must be an integer")
+		return 0, models.NewInvalidInputError(field, "must be an integer")
 	}
 
 	return converted, nil
@@ -36,7 +37,7 @@ func (u *URLParams) GetBool(field string) (bool, error) {
 
 	converted, err := strconv.ParseBool(value)
 	if err != nil {
-		return false, NewInvalidInputError(field, "must be a boolean")
+		return false, models.NewInvalidInputError(field, "must be a boolean")
 	}
 
 	return converted, nil

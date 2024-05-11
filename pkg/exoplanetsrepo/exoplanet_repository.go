@@ -4,20 +4,21 @@ import (
 	"database/sql"
 	"fmt"
 	"space-api/pkg/models"
-	"space-api/pkg/querybuilder"
-	"space-api/pkg/querymodifiers"
+	"space-api/pkg/sqlutil"
 
 	"github.com/doug-martin/goqu/v9"
 	_ "github.com/lib/pq"
 )
 
 type ExoplanetsRepository struct {
-	queryBuilder *querybuilder.QueryBuilder
-	baseQuery    *goqu.SelectDataset
+	queryBuilder    *sqlutil.QueryBuilder
+	exoplanetsQuery *goqu.SelectDataset
+	countQuery      *goqu.SelectDataset
+	connInfo        string
 }
 
-func New(queryBuilder *querybuilder.QueryBuilder) *ExoplanetsRepository {
-	query := goqu.Select(
+func New(queryBuilder *sqlutil.QueryBuilder, connInfo string) *ExoplanetsRepository {
+	exoplanetsQuery := goqu.Select(
 		"id",
 		"planet_name",
 		"host_name",
@@ -26,20 +27,25 @@ func New(queryBuilder *querybuilder.QueryBuilder) *ExoplanetsRepository {
 		"year_discovered",
 	).From("exoplanet")
 
+	countQuery := goqu.Select(
+		goqu.L("COUNT(*) total"),
+	).From("exoplanet")
+
 	return &ExoplanetsRepository{
-		queryBuilder: queryBuilder,
-		baseQuery:    query,
+		queryBuilder:    queryBuilder,
+		exoplanetsQuery: exoplanetsQuery,
+		countQuery:      countQuery,
+		connInfo:        connInfo,
 	}
 }
 
-func (e *ExoplanetsRepository) Read(queryModifiers *querymodifiers.QueryModifiers) ([]models.Exoplanet, error) {
-	modifiedSQL, args, err := e.queryBuilder.Build(e.baseQuery, queryModifiers)
+func (e *ExoplanetsRepository) ReadExoplanets(queryModifiers *sqlutil.QueryModifiers) ([]models.Exoplanet, error) {
+	modifiedSQL, args, err := e.queryBuilder.BuildQuery(e.exoplanetsQuery, queryModifiers)
 	if err != nil {
 		return nil, fmt.Errorf("build sql: %w", err)
 	}
 
-	connInfo := "host=localhost port=5432 user=test password=test dbname=space sslmode=disable"
-	db, err := sql.Open("postgres", connInfo)
+	db, err := sql.Open("postgres", e.connInfo)
 	if err != nil {
 		return nil, fmt.Errorf("connect to postgres: %w", err)
 	}
@@ -50,7 +56,7 @@ func (e *ExoplanetsRepository) Read(queryModifiers *querymodifiers.QueryModifier
 	}
 	defer rows.Close()
 
-	var records []models.Exoplanet
+	records := make([]models.Exoplanet, 0)
 
 	for rows.Next() {
 		var record models.Exoplanet
@@ -61,7 +67,7 @@ func (e *ExoplanetsRepository) Read(queryModifiers *querymodifiers.QueryModifier
 			&record.SystemNumber,
 			&record.DiscoveryMethod,
 			&record.YearDiscovered); err != nil {
-			return nil, fmt.Errorf("scan: %w", err)
+			return nil, fmt.Errorf("scan row: %w", err)
 		}
 
 		records = append(records, record)
@@ -72,4 +78,24 @@ func (e *ExoplanetsRepository) Read(queryModifiers *querymodifiers.QueryModifier
 	}
 
 	return records, nil
+}
+
+func (e *ExoplanetsRepository) ReadCount(queryModifiers *sqlutil.QueryModifiers) (int, error) {
+	modifiedSQL, args, err := e.queryBuilder.BuildCountQuery(e.countQuery, queryModifiers)
+	if err != nil {
+		return 0, fmt.Errorf("build sql: %w", err)
+	}
+
+	db, err := sql.Open("postgres", e.connInfo)
+	if err != nil {
+		return 0, fmt.Errorf("connect to postgres: %w", err)
+	}
+
+	var count int
+	row := db.QueryRow(modifiedSQL, args...)
+	if err := row.Scan(&count); err != nil {
+		return 0, fmt.Errorf("scan row: %w", err)
+	}
+
+	return count, nil
 }
